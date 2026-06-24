@@ -1,7 +1,12 @@
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from app.db.base import Base
+
+# Register all models with SQLAlchemy metadata
+import app.models
+
 import os
 
 load_dotenv()
@@ -9,13 +14,17 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    raise ValueError("❌ DATABASE_URL not found in .env file")
+    raise ValueError("DATABASE_URL not found in .env file")
 
-print(f"✅ Using DATABASE_URL: {DATABASE_URL}")
+print(f"Using DATABASE_URL: {DATABASE_URL}")
 
 engine = create_engine(DATABASE_URL, echo=False)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
 
 def get_db():
     db = SessionLocal()
@@ -25,5 +34,5 @@ def get_db():
         db.close()
 
 def init_db():
-    """Create all tables"""
+    """Create all tables safely"""
     Base.metadata.create_all(bind=engine)

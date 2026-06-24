@@ -1,0 +1,1139 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>STREAM</title>
+<style>
+  /* ===== ROOT ===== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --terracotta: #C96F4A;
+    --clay: #E8D5C4;
+    --sky: #A9D8F7;
+    --white: #ffffff;
+    --dark: #1F2937;
+    --bg: #f0ebe6;
+    --bg-card: #ffffff;
+    --bg-hover: #f7f3ef;
+    --border: #e0d6cd;
+    --text-primary: #1F2937;
+    --text-secondary: #6b7280;
+    --accent: var(--terracotta);
+    --accent-hover: #b85e3a;
+    --like: #f4212e;
+    --retweet: #00ba7c;
+    --gold: #F59E0B;
+    --green: #10B981;
+    --radius: 16px;
+    --radius-sm: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ===== PINNED HEADER ===== */
+  .pinned-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pinned-header.scrolled {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  .top-nav {
+    width: 100%;
+    max-width: 600px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+    background: var(--white);
+  }
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-mark { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+  .logo-mark svg { width: 100%; height: 100%; }
+  .logo-text {
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, var(--terracotta), var(--sky));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ===== APP CONTAINER ===== */
+  .app-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding-top: 64px;
+    padding-bottom: 60px;
+    min-height: 100vh;
+    background: var(--bg);
+  }
+
+  /* ===== FEED POST ===== */
+  .feed-post {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px 20px 14px;
+    margin: 0 12px 12px 12px;
+    display: flex;
+    gap: 14px;
+    cursor: default;
+    transition: background 0.15s, box-shadow 0.15s;
+    border: 1px solid var(--border);
+  }
+  .feed-post:hover {
+    background: var(--bg-hover);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .post-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .post-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .post-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+  .post-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-primary);
+    letter-spacing: -0.2px;
+  }
+  .post-verified { color: var(--terracotta); display: flex; align-items: center; }
+  .post-verified svg { width: 16px; height: 16px; fill: var(--terracotta); }
+  .post-handle, .post-time {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 400;
+  }
+  .post-time::before { content: "· "; }
+  .post-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+    word-wrap: break-word;
+  }
+  .post-text a { color: var(--terracotta); text-decoration: none; font-weight: 500; }
+  .post-text a:hover { text-decoration: underline; }
+
+  .link-card {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: var(--white);
+  }
+  .link-card:hover {
+    border-color: var(--terracotta);
+    box-shadow: 0 2px 8px rgba(201,111,74,0.06);
+  }
+  .link-card .link-img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    background: var(--clay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .link-info { padding: 14px 16px; background: var(--white); }
+  .link-domain {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+  }
+  .link-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+  .link-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .post-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0 6px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+  .reaction-emojis { display: flex; align-items: center; gap: 2px; }
+  .reaction-emoji {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--clay);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    margin-left: -4px;
+  }
+  .reaction-emoji:first-child { margin-left: 0; }
+  .stats-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .post-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 0;
+    margin-top: 4px;
+  }
+  .action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px 6px 8px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 9999px;
+    transition: all 0.2s;
+  }
+  .action-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; }
+  .action-btn:hover.reply { color: var(--terracotta); background: rgba(201,111,74,0.08); }
+  .action-btn:hover.retweet { color: var(--retweet); background: rgba(0,186,124,0.08); }
+  .action-btn:hover.like { color: var(--like); background: rgba(244,33,46,0.08); }
+  .action-btn:hover.share { color: var(--terracotta); background: rgba(201,111,74,0.08); }
+  .action-btn.liked { color: var(--like); }
+  .action-btn.liked svg { fill: var(--like); stroke: var(--like); }
+  .action-btn.retweeted { color: var(--retweet); }
+  .action-btn.retweeted svg { fill: var(--retweet); stroke: var(--retweet); }
+
+  /* ===== BOND CARD ===== */
+  .bond-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 18px 20px 14px;
+    margin: 12px 16px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: all 0.2s ease;
+  }
+  .bond-card.unlocked {
+    border-color: var(--gold);
+    box-shadow: 0 4px 16px rgba(245,158,11,0.08);
+  }
+  .bond-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .bond-info h3 {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.2px;
+  }
+  .bond-info .bond-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .bond-price {
+    background: var(--clay);
+    padding: 4px 14px;
+    border-radius: 40px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--terracotta);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .bond-price.unlocked {
+    background: var(--gold);
+    color: #fff;
+  }
+
+  .bond-matches { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 12px; }
+  .bond-match {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--clay);
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    transition: background 0.15s;
+    min-height: 44px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .bond-match .teams {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--dark);
+    flex: 1;
+  }
+  .bond-match .teams .vs {
+    color: var(--text-secondary);
+    font-weight: 400;
+    font-size: 11px;
+  }
+  .bond-match .prediction {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--terracotta);
+    background: var(--white);
+    padding: 2px 12px;
+    border-radius: 30px;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    transition: all 0.3s ease;
+  }
+  .bond-match .analysis-btn {
+    background: transparent;
+    border: none;
+    color: var(--terracotta);
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 20px;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .bond-match .analysis-btn:hover { background: rgba(201,111,74,0.1); }
+
+  .bond-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .unlock-btn {
+    background: var(--terracotta);
+    color: #fff;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 40px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .unlock-btn:hover { transform: scale(1.02); background: var(--accent-hover); }
+  .unlock-btn:active { transform: scale(0.98); }
+  .unlock-btn .coin-icon { font-size: 16px; }
+  .bond-card.unlocked .unlock-btn {
+    background: var(--green);
+    box-shadow: 0 2px 8px rgba(16,185,129,0.2);
+  }
+  .bond-card.unlocked .unlock-btn:hover { background: #059669; }
+
+  /* ===== PROFILE ===== */
+  .profile-container { padding: 16px 16px 20px; }
+  .profile-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 32px 24px 24px;
+    text-align: center;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--terracotta), var(--sky));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 56px;
+    font-weight: 700;
+    color: #fff;
+    border: 4px solid var(--white);
+    box-shadow: 0 4px 20px rgba(201,111,74,0.15);
+    user-select: none;
+  }
+  .profile-card .profile-name {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.3px;
+  }
+  .profile-card .profile-username {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+  .profile-card .profile-bio {
+    font-size: 14px;
+    color: var(--dark);
+    margin-top: 8px;
+    padding: 0 8px;
+  }
+  .profile-balance {
+    margin: 16px auto 0;
+    padding: 12px 28px;
+    background: var(--clay);
+    border: 1px solid var(--border);
+    border-radius: 60px;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--dark);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .profile-balance:hover { transform: scale(1.04); border-color: var(--terracotta); }
+  .profile-balance:active { transform: scale(0.96); }
+  .profile-balance .coin-icon { font-size: 26px; }
+  .profile-balance .balance-label {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .coin-shop {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px 16px 16px;
+    border: 1px solid var(--border);
+    margin-top: 16px;
+    box-shadow: var(--shadow);
+  }
+  .coin-shop .shop-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -0.2px;
+  }
+  .coin-shop .shop-title .coin-icon { font-size: 22px; }
+  .coin-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .coin-option {
+    background: var(--clay);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .coin-option:hover { transform: scale(1.02); border-color: var(--terracotta); }
+  .coin-option:active { transform: scale(0.97); }
+  .coin-option .coin-amount {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .coin-option .coin-amount .coin-icon { font-size: 20px; }
+  .coin-option .coin-price {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+  .coin-option .coin-badge {
+    display: inline-block;
+    background: var(--gold);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 30px;
+    margin-top: 6px;
+  }
+
+  /* ===== BOTTOM NAV ===== */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
+  }
+  .bottom-tab {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .bottom-tab:hover,
+  .bottom-tab.active { color: var(--terracotta); }
+  .bottom-tab svg {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    fill: none;
+    transition: stroke 0.2s;
+  }
+  .bottom-tab.active svg { stroke: var(--terracotta); }
+
+  /* ===== MODALS ===== */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: var(--white);
+    border-radius: 28px;
+    max-width: 480px;
+    width: 100%;
+    padding: 28px 24px 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    animation: modalFadeIn 0.25s ease;
+  }
+  @keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.96) translateY(12px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-box .modal-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: -0.2px;
+  }
+  .modal-box .modal-title span {
+    background: var(--terracotta);
+    color: #fff;
+    padding: 0 12px;
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .modal-box .modal-divider {
+    width: 40px;
+    height: 4px;
+    background: var(--terracotta);
+    border-radius: 4px;
+    margin: 8px 0 16px;
+  }
+  .modal-box .modal-body {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--dark);
+    margin-bottom: 20px;
+    white-space: pre-wrap;
+  }
+  .modal-box .modal-close-btn {
+    background: var(--terracotta);
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 40px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    width: 100%;
+  }
+  .modal-box .modal-close-btn:hover { background: var(--accent-hover); }
+
+  /* ===== UTILITIES ===== */
+  .hidden { display: none !important; }
+  .services-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px 12px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 64px;
+    z-index: 100;
+  }
+  .services-header h2 {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.3px;
+  }
+  .coins-display {
+    background: var(--clay);
+    padding: 6px 18px 6px 14px;
+    border-radius: 40px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--dark);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .coins-display:hover { transform: scale(1.02); border-color: var(--terracotta); }
+  .coins-display .coin-icon { font-size: 18px; }
+  .bond-price .coin-icon { font-size: 14px; }
+
+  @media (max-width: 480px) {
+    .feed-post { padding: 14px 14px 10px; margin: 0 8px 10px 8px; gap: 10px; }
+    .post-avatar { width: 40px; height: 40px; font-size: 14px; }
+    .post-text { font-size: 14px; }
+    .bond-card { margin: 10px 8px; padding: 14px; }
+    .profile-avatar { width: 90px; height: 90px; font-size: 42px; }
+    .coin-options { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .coin-option { padding: 12px 8px; }
+    .coin-option .coin-amount { font-size: 18px; }
+    .services-header { padding: 12px 14px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== PINNED HEADER ===== -->
+<div class="pinned-header" id="pinnedHeader">
+  <nav class="top-nav">
+    <div class="nav-left">
+      <div class="logo-mark">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" rx="10" fill="var(--terracotta)"/>
+          <g fill="#fff" transform="scale(0.4) translate(12, 10)">
+            <path d="M 16,92 C 8,92 4,86 4,78 C 4,70 8,66 16,64 C 20,63 24,62 28,60 C 32,58 34,55 34,51 C 34,46 30,43 24,43 C 18,43 14,46 12,50 L 6,46 C 10,38 16,34 26,34 C 38,34 46,42 46,51 C 46,60 40,66 32,68 C 28,69 24,70 20,72 C 16,74 14,77 14,80 C 14,86 18,90 24,90 C 32,90 36,86 40,80 L 46,84 C 42,92 34,96 24,96 Z M 26,34 C 34,26 44,24 56,26 C 68,28 76,36 80,46 C 84,56 82,66 76,74 C 70,82 60,88 48,90 C 42,91 36,92 30,91 C 24,90 19,88 15,84 C 11,80 9,74 9,68 C 9,62 11,56 15,50 C 17,47 19,44 20,41 C 22,38 24,36 26,34 Z M 32,46 C 36,44 42,44 46,46 C 50,49 52,54 50,59 C 48,64 44,67 38,67 C 32,67 28,64 26,59 C 24,54 26,49 32,46 Z M 48,52 C 54,50 60,49 66,50 C 69,51 71,53 72,55 C 70,58 66,60 62,61 C 57,62 53,60 50,57 C 49,56 48,54 48,52 Z" fill-rule="evenodd"/>
+          </g>
+        </svg>
+      </div>
+      <span class="logo-text">STREAM</span>
+    </div>
+  </nav>
+</div>
+
+<!-- ===== APP CONTAINER ===== -->
+<div class="app-container" id="appContainer">
+
+  <!-- ===== HOME SCREEN ===== -->
+  <div id="homeScreen"></div>
+
+  <!-- ===== BONDS SCREEN ===== -->
+  <div id="servicesScreen" style="display:none;">
+    <div class="services-header">
+      <h2>📊 Active Bonds</h2>
+      <div class="coins-display" onclick="switchTab(null, 'profile')">
+        <span class="coin-icon">🪙</span> <span id="userCoinsDisplay">120</span>
+      </div>
+    </div>
+    <div id="bondsContainer"></div>
+  </div>
+
+  <!-- ===== PROFILE SCREEN ===== -->
+  <div id="profileScreen" style="display:none;">
+    <div class="profile-container">
+      <div class="profile-card">
+        <div class="profile-avatar">👤</div>
+        <div class="profile-name">Alex Rivera</div>
+        <div class="profile-username">@stream_master</div>
+        <div class="profile-bio">⚡ Clone enthusiast • Predictions pro • 🏆 12x winner</div>
+        <div class="profile-balance" onclick="openPurchaseModal()">
+          <span class="coin-icon">🪙</span>
+          <span id="profileCoins">120</span>
+          <span class="balance-label">Coins</span>
+        </div>
+      </div>
+      <div class="coin-shop">
+        <div class="shop-title"><span class="coin-icon">🪙</span> Get More Coins</div>
+        <div class="coin-options">
+          <div class="coin-option" onclick="openPurchaseModal(50, 4.99)">
+            <div class="coin-amount"><span class="coin-icon">🪙</span> 50</div>
+            <div class="coin-price">$4.99</div>
+            <div class="coin-badge">Popular</div>
+          </div>
+          <div class="coin-option" onclick="openPurchaseModal(120, 9.99)">
+            <div class="coin-amount"><span class="coin-icon">🪙</span> 120</div>
+            <div class="coin-price">$9.99</div>
+            <div class="coin-badge">Best Value</div>
+          </div>
+          <div class="coin-option" onclick="openPurchaseModal(300, 19.99)">
+            <div class="coin-amount"><span class="coin-icon">🪙</span> 300</div>
+            <div class="coin-price">$19.99</div>
+            <div class="coin-badge">🔥 Hot</div>
+          </div>
+          <div class="coin-option" onclick="openPurchaseModal(750, 39.99)">
+            <div class="coin-amount"><span class="coin-icon">🪙</span> 750</div>
+            <div class="coin-price">$39.99</div>
+            <div class="coin-badge">🌟 Premium</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav class="bottom-nav">
+  <div class="bottom-tab active" onclick="switchTab(this, 'home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Home</span>
+  </div>
+  <div class="bottom-tab" onclick="switchTab(this, 'services')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    <span>Bonds</span>
+  </div>
+  <div class="bottom-tab" onclick="switchTab(this, 'profile')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Profile</span>
+  </div>
+</nav>
+
+<!-- ===== ANALYSIS MODAL ===== -->
+<div class="modal-overlay" id="analysisModal">
+  <div class="modal-box">
+    <div class="modal-title">📊 Match Analysis <span>STREAM</span></div>
+    <div class="modal-divider"></div>
+    <div class="modal-body" id="analysisModalBody"></div>
+    <button class="modal-close-btn" onclick="closeAnalysisModal()">Close</button>
+  </div>
+</div>
+
+<!-- ===== PURCHASE MODAL ===== -->
+<div class="modal-overlay" id="purchaseModal">
+  <div class="modal-box">
+    <div class="modal-title">💳 Complete Purchase <span>STREAM</span></div>
+    <div class="modal-divider"></div>
+    <div class="purchase-details">
+      <div class="pkg-info">
+        <span class="pkg-name" id="pkgAmount">50 Coins</span>
+        <span class="pkg-price" id="pkgPrice">$4.99</span>
+      </div>
+      <div class="pkg-total">🪙 <span id="pkgTotal">50</span></div>
+    </div>
+    <div class="input-group">
+      <label>Account Email</label>
+      <input type="email" id="paymentEmail" placeholder="you@example.com" value="alex@stream.com">
+    </div>
+    <div class="input-group">
+      <label>Payment Method</label>
+      <select id="paymentMethod">
+        <option value="card">💳 Credit Card</option>
+        <option value="paypal">📱 PayPal</option>
+        <option value="crypto">🪙 Crypto</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="confirmPurchase()">Confirm Purchase</button>
+      <button class="btn-secondary" onclick="closePurchaseModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== STATE =====
+  let userCoins = 120;
+  let selectedPackage = { amount: 0, price: 0 };
+  let user_id = 1; // fallback; will be set from Telegram if available
+
+  // ===== DOM REFS =====
+  const homeScreen = document.getElementById('homeScreen');
+  const servicesScreen = document.getElementById('servicesScreen');
+  const profileScreen = document.getElementById('profileScreen');
+  const userCoinsDisplay = document.getElementById('userCoinsDisplay');
+  const profileCoins = document.getElementById('profileCoins');
+  const pinnedHeader = document.getElementById('pinnedHeader');
+
+  // ===== TELEGRAM AUTH =====
+  if (window.Telegram && window.Telegram.WebApp) {
+    const user = window.Telegram.WebApp.initDataUnsafe?.user;
+    if (user) {
+      user_id = user.id || 1;
+    }
+  }
+
+  // ===== TAB SWITCHING =====
+  function switchTab(element, tabName) {
+    if (element) {
+      document.querySelectorAll('.bottom-tab').forEach(el => el.classList.remove('active'));
+      element.classList.add('active');
+    }
+    homeScreen.style.display = 'none';
+    servicesScreen.style.display = 'none';
+    profileScreen.style.display = 'none';
+
+    if (tabName === 'home') {
+      homeScreen.style.display = '';
+      if (homeScreen.children.length === 0) loadFeed();
+    } else if (tabName === 'services') {
+      servicesScreen.style.display = '';
+      loadBonds();
+    } else if (tabName === 'profile') {
+      profileScreen.style.display = '';
+      updateCoinsDisplay();
+    }
+  }
+
+  // ===== COIN DISPLAY =====
+  function updateCoinsDisplay() {
+    if (userCoinsDisplay) userCoinsDisplay.textContent = userCoins;
+    if (profileCoins) profileCoins.textContent = userCoins;
+  }
+
+  // ===== HOME FEED =====
+  async function loadFeed() {
+    try {
+      const res = await fetch(`/api/feed?user_id=${user_id}`);
+      if (!res.ok) throw new Error('Feed load failed');
+      const items = await res.json();
+      homeScreen.innerHTML = '';
+      if (items.length === 0) {
+        homeScreen.innerHTML = '<p style="padding:20px;text-align:center;color:var(--text-secondary);">No feed items yet.</p>';
+        return;
+      }
+      items.forEach(item => {
+        const post = createFeedPost(item);
+        homeScreen.appendChild(post);
+      });
+    } catch (e) {
+      homeScreen.innerHTML = '<p style="padding:20px;text-align:center;color:var(--text-secondary);">Error loading feed.</p>';
+      console.error(e);
+    }
+  }
+
+  function createFeedPost(item) {
+    const article = document.createElement('article');
+    article.className = 'feed-post';
+    // Avatar
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'post-avatar';
+    avatarDiv.style.background = item.author?.avatar_bg || 'linear-gradient(135deg, var(--terracotta), var(--sky))';
+    avatarDiv.textContent = (item.author?.name || 'ST').split(' ').map(w => w[0]).join('');
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'post-content';
+
+    // Header
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'post-header';
+    headerDiv.innerHTML = `
+      <span class="post-name">${item.author?.name || 'STREAM'}</span>
+      <span class="post-verified"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.2L6.8 12.46l1.41-1.42 2.26 2.26 4.8-5.23 1.47 1.36-6.2 6.77z"/></svg></span>
+      <span class="post-handle">${item.author?.handle || '@stream'}</span>
+      <span class="post-time">${item.posted_at ? new Date(item.posted_at).toLocaleDateString() : 'now'}</span>
+    `;
+
+    // Body
+    const textDiv = document.createElement('div');
+    textDiv.className = 'post-text';
+    textDiv.innerHTML = item.body || item.title || '';
+
+    // Link card if present
+    let linkHTML = '';
+    if (item.link) {
+      linkHTML = `
+        <div class="link-card" onclick="window.location='${item.link.url}'">
+          <div class="link-info">
+            <div class="link-domain">${item.link.text || 'Details'}</div>
+            <div class="link-title">${item.link.text || 'View'}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Stats
+    const statsDiv = document.createElement('div');
+    statsDiv.className = 'post-stats';
+    const reactions = (item.engagement?.reactions || ['🔥']).map(e => `<span class="reaction-emoji">${e}</span>`).join('');
+    statsDiv.innerHTML = `
+      <div class="reaction-emojis">${reactions}<span class="stats-text" style="margin-left:6px">${item.engagement?.likes || 0}</span></div>
+      <span class="stats-text">${item.engagement?.comments || 0} comments · ${item.engagement?.shares || 0} shares</span>
+    `;
+
+    // Actions
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'post-actions';
+    actionsDiv.innerHTML = `
+      <button class="action-btn reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>${item.engagement?.comments || 0}</span></button>
+      <button class="action-btn retweet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>${item.engagement?.shares || 0}</span></button>
+      <button class="action-btn like"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>${item.engagement?.likes || 0}</span></button>
+      <button class="action-btn share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>
+    `;
+
+    // Assemble
+    contentDiv.appendChild(headerDiv);
+    contentDiv.appendChild(textDiv);
+    if (linkHTML) {
+      const temp = document.createElement('div');
+      temp.innerHTML = linkHTML;
+      contentDiv.appendChild(temp.firstElementChild);
+    }
+    contentDiv.appendChild(statsDiv);
+    contentDiv.appendChild(actionsDiv);
+
+    article.appendChild(avatarDiv);
+    article.appendChild(contentDiv);
+    return article;
+  }
+
+  // ===== BONDS =====
+  async function loadBonds() {
+    const container = document.getElementById('bondsContainer');
+    container.innerHTML = 'Loading bonds...';
+    try {
+      const res = await fetch(`/api/bonds?user_id=${user_id}`);
+      if (!res.ok) throw new Error('Failed to load bonds');
+      const bonds = await res.json();
+      container.innerHTML = '';
+      if (bonds.length === 0) {
+        container.innerHTML = '<p style="padding:20px;text-align:center;color:var(--text-secondary);">No bonds available.</p>';
+        return;
+      }
+      bonds.forEach(b => {
+        const card = document.createElement('div');
+        card.className = `bond-card ${b.unlocked ? 'unlocked' : 'locked'}`;
+        card.id = `bond_${b.id}`;
+        card.innerHTML = `
+          <div class="bond-header">
+            <div class="bond-info">
+              <h3>${b.title}</h3>
+              <div class="bond-meta">
+                <span>${b.match_count} matches</span>
+                <span>•</span>
+                <span>${b.expires_at ? 'Expires ' + new Date(b.expires_at).toLocaleDateString() : 'No expiry'}</span>
+              </div>
+            </div>
+            <div class="bond-price ${b.unlocked ? 'unlocked' : ''}">
+              <span class="coin-icon">🪙</span> ${b.unlocked ? 'Unlocked' : b.price}
+            </div>
+          </div>
+          <div class="bond-matches" id="matches_${b.id}"></div>
+          <div class="bond-actions">
+            ${b.unlocked
+              ? `<button class="unlock-btn" onclick="viewBondMatches(${b.id})">📊 View Matches</button>`
+              : `<button class="unlock-btn" onclick="unlockBond(${b.id})"><span class="coin-icon">🪙</span> Unlock Analysis</button>`
+            }
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    } catch (e) {
+      container.innerHTML = '<p style="padding:20px;text-align:center;color:var(--text-secondary);">Failed to load bonds.</p>';
+      console.error(e);
+    }
+  }
+
+  async function unlockBond(bondId) {
+    if (!confirm('Unlock this bond? This will spend coins.')) return;
+    try {
+      const res = await fetch(`/api/bonds/${bondId}/unlock?user_id=${user_id}`, { method: 'POST' });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.detail || 'Failed to unlock bond.');
+        return;
+      }
+      alert('Bond unlocked successfully!');
+      loadBonds();
+    } catch (e) {
+      alert('Error unlocking bond.');
+      console.error(e);
+    }
+  }
+
+  async function viewBondMatches(bondId) {
+    const container = document.getElementById(`matches_${bondId}`);
+    if (container.innerHTML) {
+      // Toggle visibility
+      container.style.display = container.style.display === 'none' ? 'flex' : 'none';
+      return;
+    }
+    container.innerHTML = 'Loading matches...';
+    try {
+      const res = await fetch(`/api/bonds/${bondId}/matches?user_id=${user_id}`);
+      if (!res.ok) throw new Error('Failed to load matches');
+      const matches = await res.json();
+      container.innerHTML = '';
+      if (matches.length === 0) {
+        container.innerHTML = '<p style="padding:8px;color:var(--text-secondary);">No matches found.</p>';
+        return;
+      }
+      matches.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'bond-match';
+        const scoreText = m.score ? `${m.score.home} - ${m.score.away}` : '—';
+        div.innerHTML = `
+          <span class="teams">${m.home_team} <span class="vs">vs</span> ${m.away_team} (${m.status})</span>
+          <span class="prediction">${m.prediction?.result || 'N/A'}</span>
+          <button class="analysis-btn" onclick="openAnalysisModal('${m.analysis || 'No analysis available.'}')">Analysis</button>
+        `;
+        container.appendChild(div);
+      });
+      container.style.display = 'flex';
+    } catch (e) {
+      container.innerHTML = '<p style="padding:8px;color:var(--text-secondary);">Error loading matches.</p>';
+      console.error(e);
+    }
+  }
+
+  // ===== MODALS =====
+  const analysisModal = document.getElementById('analysisModal');
+  const analysisModalBody = document.getElementById('analysisModalBody');
+  function openAnalysisModal(text) {
+    analysisModalBody.innerText = text;
+    analysisModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeAnalysisModal() {
+    analysisModal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  analysisModal.addEventListener('click', function(e) {
+    if (e.target === this) closeAnalysisModal();
+  });
+
+  // ===== PURCHASE MODAL =====
+  const purchaseModal = document.getElementById('purchaseModal');
+  function openPurchaseModal(amount = 0, price = 0) {
+    if (amount === 0 && price === 0) { amount = 120; price = 9.99; }
+    selectedPackage = { amount, price };
+    document.getElementById('pkgAmount').textContent = `${amount} Coins`;
+    document.getElementById('pkgPrice').textContent = `$${price.toFixed(2)}`;
+    document.getElementById('pkgTotal').textContent = amount;
+    purchaseModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closePurchaseModal() {
+    purchaseModal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  function confirmPurchase() {
+    const email = document.getElementById('paymentEmail').value;
+    const method = document.getElementById('paymentMethod').value;
+    if (!email) { alert('Please enter your account email.'); return; }
+    userCoins += selectedPackage.amount;
+    updateCoinsDisplay();
+    alert(`✅ Successfully purchased ${selectedPackage.amount} coins! (Payment: ${method})`);
+    closePurchaseModal();
+  }
+  purchaseModal.addEventListener('click', function(e) {
+    if (e.target === this) closePurchaseModal();
+  });
+
+  // ===== SCROLL EFFECT =====
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 10) pinnedHeader.classList.add('scrolled');
+    else pinnedHeader.classList.remove('scrolled');
+  });
+
+  // ===== KEYBOARD =====
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      if (analysisModal.classList.contains('active')) closeAnalysisModal();
+      if (purchaseModal.classList.contains('active')) closePurchaseModal();
+    }
+  });
+
+  // ===== INIT =====
+  updateCoinsDisplay();
+  // Default to Home
+  homeScreen.style.display = '';
+  loadFeed();
+</script>
+</body>
+</html>
