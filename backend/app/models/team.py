@@ -10,12 +10,7 @@ class Team(Base):
     country = Column(String, nullable=True)
     api_id = Column(String, unique=True, index=True)
     logo = Column(String, nullable=True)
-
     league_id = Column(Integer, ForeignKey("leagues.id"), nullable=True)
+
     league = relationship("League", back_populates="teams")
-    
-    # Add this relationship
     players = relationship("Player", back_populates="team")
-alembic revision --autogenerate -m "remove notes test column"
-alembic upgrade head
-alembic current

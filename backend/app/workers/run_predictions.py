@@ -4,14 +4,12 @@ app/workers/run_predictions.py
 ML prediction worker — trains a voting ensemble on historical
 match results and writes probabilities to the predictions table.
 
+Only predictions for the held-out eval set (last 20% by date)
+are stored — these are matches the model never trained on,
+so accuracy figures are honest.
+
 Run with:
     python -m app.workers.run_predictions
-
-Features engineered purely from the matches table:
-  - Rolling 5-match form for home/away team (points, GF, GA)
-  - Head-to-head record (last 10 meetings)
-  - Home advantage flag
-  - League average goals context
 """
 
 import os
@@ -58,19 +56,8 @@ def encode_result(home_score, away_score):
 
 
 def build_form(matches_df):
-    """
-    For each match, compute rolling 5-match form for both teams
-    BEFORE that match date (no data leakage).
-    Returns a dict keyed by match id.
-    """
     matches_df = matches_df.sort_values("match_date").copy()
-    matches_df["result"] = matches_df.apply(
-        lambda r: encode_result(r["home_score"], r["away_score"]), axis=1
-    )
-
-    # Build per-team match history
-    team_history = {}  # team_id -> list of (date, gf, ga, points)
-
+    team_history = {}
     form_rows = {}
 
     for _, row in matches_df.iterrows():
@@ -84,16 +71,15 @@ def build_form(matches_df):
             recent = [h for h in history if h["date"] < date][-FORM_WINDOW:]
             if not recent:
                 return {"form_pts": 0.0, "form_gf": 0.0, "form_ga": 0.0, "form_n": 0}
-            pts = sum(h["pts"] for h in recent)
-            gf = sum(h["gf"] for h in recent)
-            ga = sum(h["ga"] for h in recent)
-            return {"form_pts": pts, "form_gf": gf, "form_ga": ga, "form_n": len(recent)}
+            return {
+                "form_pts": sum(h["pts"] for h in recent),
+                "form_gf":  sum(h["gf"] for h in recent),
+                "form_ga":  sum(h["ga"] for h in recent),
+                "form_n":   len(recent),
+            }
 
-        home_form = get_form(home_id)
-        away_form = get_form(away_id)
-        form_rows[mid] = {"home": home_form, "away": away_form}
+        form_rows[mid] = {"home": get_form(home_id), "away": get_form(away_id)}
 
-        # Update histories AFTER computing form (prevent leakage)
         hg, ag = row["home_score"], row["away_score"]
         h_pts = 3 if hg > ag else (1 if hg == ag else 0)
         a_pts = 3 if ag > hg else (1 if ag == hg else 0)
@@ -109,14 +95,10 @@ def build_form(matches_df):
 
 
 def build_h2h(matches_df):
-    """
-    For each match, compute H2H record from all PRIOR meetings
-    between those two teams (regardless of home/away).
-    """
     matches_df = matches_df.sort_values("match_date").copy()
     h2h_rows = {}
 
-    for idx, row in matches_df.iterrows():
+    for _, row in matches_df.iterrows():
         mid = row["id"]
         home_id = row["home_team_id"]
         away_id = row["away_team_id"]
@@ -139,7 +121,6 @@ def build_h2h(matches_df):
         for _, p in prior.iterrows():
             hg, ag = p["home_score"], p["away_score"]
             total_goals += hg + ag
-            # Normalise: was home_id the home team?
             if p["home_team_id"] == home_id:
                 if hg > ag: hw += 1
                 elif hg == ag: d += 1
@@ -152,7 +133,7 @@ def build_h2h(matches_df):
         n = len(prior)
         h2h_rows[mid] = {
             "h2h_hw": hw / n,
-            "h2h_d": d / n,
+            "h2h_d":  d / n,
             "h2h_aw": aw / n,
             "h2h_avg_goals": total_goals / n,
             "h2h_n": n,
@@ -172,29 +153,24 @@ def build_features(matches_df, form_rows, h2h_rows, league_avgs):
         league_avg = league_avgs.get(row["league_id"], 2.5)
 
         feat = {
-            # Home form
-            "home_form_pts":   hf.get("form_pts", 0.0),
-            "home_form_gf":    hf.get("form_gf", 0.0),
-            "home_form_ga":    hf.get("form_ga", 0.0),
-            "home_form_n":     hf.get("form_n", 0),
-            # Away form
-            "away_form_pts":   af.get("form_pts", 0.0),
-            "away_form_gf":    af.get("form_gf", 0.0),
-            "away_form_ga":    af.get("form_ga", 0.0),
-            "away_form_n":     af.get("form_n", 0),
-            # Derived
-            "form_diff":       hf.get("form_pts", 0.0) - af.get("form_pts", 0.0),
-            "gf_diff":         hf.get("form_gf", 0.0) - af.get("form_gf", 0.0),
-            "ga_diff":         hf.get("form_ga", 0.0) - af.get("form_ga", 0.0),
-            # H2H
-            "h2h_hw":          h2h.get("h2h_hw", 0.0),
-            "h2h_d":           h2h.get("h2h_d", 0.0),
-            "h2h_aw":          h2h.get("h2h_aw", 0.0),
-            "h2h_avg_goals":   h2h.get("h2h_avg_goals", 0.0),
-            "h2h_n":           h2h.get("h2h_n", 0),
-            # Context
+            "home_form_pts":    hf.get("form_pts", 0.0),
+            "home_form_gf":     hf.get("form_gf", 0.0),
+            "home_form_ga":     hf.get("form_ga", 0.0),
+            "home_form_n":      hf.get("form_n", 0),
+            "away_form_pts":    af.get("form_pts", 0.0),
+            "away_form_gf":     af.get("form_gf", 0.0),
+            "away_form_ga":     af.get("form_ga", 0.0),
+            "away_form_n":      af.get("form_n", 0),
+            "form_diff":        hf.get("form_pts", 0.0) - af.get("form_pts", 0.0),
+            "gf_diff":          hf.get("form_gf", 0.0) - af.get("form_gf", 0.0),
+            "ga_diff":          hf.get("form_ga", 0.0) - af.get("form_ga", 0.0),
+            "h2h_hw":           h2h.get("h2h_hw", 0.0),
+            "h2h_d":            h2h.get("h2h_d", 0.0),
+            "h2h_aw":           h2h.get("h2h_aw", 0.0),
+            "h2h_avg_goals":    h2h.get("h2h_avg_goals", 0.0),
+            "h2h_n":            h2h.get("h2h_n", 0),
             "league_avg_goals": league_avg,
-            "home_advantage":  1.0,  # always 1 — home team perspective
+            "home_advantage":   1.0,
         }
         rows.append(feat)
 
@@ -210,8 +186,7 @@ def main():
 
     log("Loading matches...")
     matches = pd.read_sql(
-        "SELECT * FROM matches WHERE status IN ('FT','AET') "
-        "ORDER BY match_date",
+        "SELECT * FROM matches WHERE status IN ('FT','AET') ORDER BY match_date",
         engine
     )
     log(f"  Loaded {len(matches)} finished matches")
@@ -220,7 +195,6 @@ def main():
         log("Not enough data to train (need 50+).", "ERROR")
         sys.exit(1)
 
-    # League average goals (prior to each match — use global avg as proxy)
     league_avgs = (
         matches.groupby("league_id")
         .apply(lambda x: (x["home_score"] + x["away_score"]).mean())
@@ -229,7 +203,7 @@ def main():
 
     log("Engineering features (form + H2H)...")
     form_rows = build_form(matches)
-    h2h_rows = build_h2h(matches)
+    h2h_rows  = build_h2h(matches)
     X_all = build_features(matches, form_rows, h2h_rows, league_avgs)
     y_all = matches.apply(
         lambda r: encode_result(r["home_score"], r["away_score"]), axis=1
@@ -239,10 +213,10 @@ def main():
     split_idx = int(len(X_all) * 0.8)
     X_fit, X_eval = X_all.iloc[:split_idx], X_all.iloc[split_idx:]
     y_fit, y_eval = y_all[:split_idx], y_all[split_idx:]
-    log(f"  Train: {len(X_fit)} matches, Eval: {len(X_eval)} matches")
+    log(f"  Train: {len(X_fit)} matches, Eval: {len(X_eval)} matches (last 20% by date)")
 
     scaler_eval = StandardScaler()
-    X_fit_s = scaler_eval.fit_transform(X_fit)
+    X_fit_s  = scaler_eval.fit_transform(X_fit)
     X_eval_s = scaler_eval.transform(X_eval)
 
     eval_voting = VotingClassifier([
@@ -259,34 +233,35 @@ def main():
     log(f"HONEST EVAL — accuracy: {acc:.4f}, log-loss: {ll:.4f}")
     log("\n" + classification_report(y_eval, y_pred, target_names=["Home", "Draw", "Away"]))
 
-    # ── Refit on ALL data for production predictions ──
-    log("Refitting on full dataset...")
+    # ── Store predictions for eval set only (never seen during training) ──
+    log("Storing predictions for eval set only (held-out 20%)...")
+    eval_matches = matches.iloc[split_idx:].copy()
+
     scaler = StandardScaler()
-    X_all_s = scaler.fit_transform(X_all)
+    X_train_scaled = scaler.fit_transform(X_fit)
+    X_eval_scaled  = scaler.transform(X_eval)
 
     voting = VotingClassifier([
         ("rf",  RandomForestClassifier(n_estimators=200, random_state=42, n_jobs=-1, class_weight="balanced")),
         ("xgb", XGBClassifier(n_estimators=200, random_state=42, eval_metric="mlogloss")),
         ("lr",  LogisticRegression(max_iter=1000, random_state=42)),
     ], voting="soft")
-    voting.fit(X_all_s, y_all)
+    voting.fit(X_train_scaled, y_fit)
 
-    probs      = voting.predict_proba(X_all_s)
+    probs      = voting.predict_proba(X_eval_scaled)
     confidence = np.max(probs, axis=1)
 
-    # ── Write to predictions table ──
     log("Writing predictions to DB...")
-    match_ids = matches["id"].tolist()
+    match_ids = eval_matches["id"].tolist()
 
     with engine.begin() as conn:
-        # Idempotent — delete existing predictions for these matches first
         conn.execute(
             text("DELETE FROM predictions WHERE match_id = ANY(:ids)"),
             {"ids": match_ids}
         )
 
     records = []
-    for i, (_, row) in enumerate(matches.iterrows()):
+    for i, (_, row) in enumerate(eval_matches.iterrows()):
         records.append({
             "match_id":           int(row["id"]),
             "predicted_home_win": float(probs[i, 0]),
