@@ -18,3 +18,4 @@ class Prediction(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     match = relationship("Match")
+notes = Column(String, nullable=True)  # migration test — will remove after

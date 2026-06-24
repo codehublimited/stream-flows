@@ -16,3 +16,6 @@ class Team(Base):
     
     # Add this relationship
     players = relationship("Player", back_populates="team")
+alembic revision --autogenerate -m "remove notes test column"
+alembic upgrade head
+alembic current
