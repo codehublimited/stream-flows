@@ -1,0 +1,144 @@
+[2026-06-23 20:58:12] [INFO] ==================================================
+[2026-06-23 20:58:12] [INFO] Step 6 (FIXED) — data processing started
+[2026-06-23 20:58:12] [INFO] ==================================================
+[2026-06-23 20:58:13] [INFO] Loaded 4086 matches total (4057 finished)
+[2026-06-23 20:58:15] [INFO] Progress: 500/4086
+[2026-06-23 20:58:16] [INFO] Progress: 1000/4086
+[2026-06-23 20:58:18] [INFO] Progress: 1500/4086
+[2026-06-23 20:58:19] [INFO] Progress: 2000/4086
+[2026-06-23 20:58:21] [INFO] Progress: 2500/4086
+[2026-06-23 20:58:23] [INFO] Progress: 3000/4086
+[2026-06-23 20:58:25] [INFO] Progress: 3500/4086
+[2026-06-23 20:58:27] [INFO] Progress: 4000/4086
+[2026-06-23 20:58:27] [INFO] team_form: 8172 rows upserted
+[2026-06-23 20:58:27] [INFO] h2h: 4086 rows upserted
+[2026-06-23 20:58:27] [INFO] league_context: 4086 rows upserted
+[2026-06-23 20:58:27] [INFO] Step 6 (FIXED) complete
+[2026-06-23 20:58:27] [INFO] ==================================================
+[2026-06-23 20:58:49] [INFO] ==================================================
+[2026-06-23 20:58:49] [INFO] Step 7 (FIXED) — ML pipeline started
+[2026-06-23 20:58:49] [INFO] ==================================================
+[2026-06-23 20:58:50] [INFO] Loading data...
+[2026-06-23 20:58:50] [INFO] Train-eligible (finished): 4057, Upcoming: 29
+[2026-06-23 20:58:50] [INFO] Engineering features...
+[2026-06-23 20:58:58] [INFO] Eval split: fit on 3245, evaluate on 812 (most recent matches)
+[2026-06-23 20:58:59] [INFO] HONEST EVAL — accuracy: 0.4544, log loss: 1.0708
+[2026-06-23 20:58:59] [INFO] 
+              precision    recall  f1-score   support
+
+        Home       0.48      0.71      0.57       341
+        Draw       0.19      0.06      0.09       193
+        Away       0.46      0.42      0.44       278
+
+    accuracy                           0.45       812
+   macro avg       0.38      0.40      0.37       812
+weighted avg       0.41      0.45      0.41       812
+
+[2026-06-23 20:58:59] [INFO] Refitting on full historical data for production predictions...
+[2026-06-23 20:59:07] [ERROR] FATAL ERROR: This RandomForestClassifier instance is not fitted yet. Call 'fit' with appropriate arguments before using this estimator.
+[2026-06-23 21:04:53] [INFO] ==================================================
+[2026-06-23 21:04:53] [INFO] Step 6 (FIXED) — data processing started
+[2026-06-23 21:04:53] [INFO] ==================================================
+[2026-06-23 21:04:53] [INFO] Loaded 4086 matches total (4057 finished)
+[2026-06-23 21:04:54] [INFO] Progress: 500/4086
+[2026-06-23 21:04:56] [INFO] Progress: 1000/4086
+[2026-06-23 21:04:57] [INFO] Progress: 1500/4086
+[2026-06-23 21:04:58] [INFO] Progress: 2000/4086
+[2026-06-23 21:05:00] [INFO] Progress: 2500/4086
+[2026-06-23 21:05:01] [INFO] Progress: 3000/4086
+[2026-06-23 21:05:03] [INFO] Progress: 3500/4086
+[2026-06-23 21:05:04] [INFO] Progress: 4000/4086
+[2026-06-23 21:05:05] [INFO] team_form: 8172 rows upserted
+[2026-06-23 21:05:05] [INFO] h2h: 4086 rows upserted
+[2026-06-23 21:05:05] [INFO] league_context: 4086 rows upserted
+[2026-06-23 21:05:05] [INFO] Step 6 (FIXED) complete
+[2026-06-23 21:05:05] [INFO] ==================================================
+[2026-06-23 21:05:06] [INFO] ==================================================
+[2026-06-23 21:05:06] [INFO] Step 7 (FIXED) — ML pipeline started
+[2026-06-23 21:05:06] [INFO] ==================================================
+[2026-06-23 21:05:07] [INFO] Loading data...
+[2026-06-23 21:05:07] [INFO] Train-eligible (finished): 4057, Upcoming: 29
+[2026-06-23 21:05:07] [INFO] Engineering features...
+[2026-06-23 21:05:09] [INFO] Eval split: fit on 3245, evaluate on 812 (most recent matches)
+[2026-06-23 21:05:10] [INFO] HONEST EVAL — accuracy: 0.4606, log loss: 1.0479
+[2026-06-23 21:05:10] [INFO] 
+              precision    recall  f1-score   support
+
+        Home       0.49      0.70      0.58       341
+        Draw       0.20      0.08      0.12       193
+        Away       0.48      0.43      0.45       278
+
+    accuracy                           0.46       812
+   macro avg       0.39      0.40      0.38       812
+weighted avg       0.42      0.46      0.43       812
+
+[2026-06-23 21:05:10] [INFO] Refitting on full historical data for production predictions...
+[2026-06-23 21:05:14] [INFO] Saved 29 predictions (model_version=2.0, eval_accuracy=0.4606)
+[2026-06-23 21:07:10] [INFO] Step 7 (FIXED) complete
+[2026-06-23 21:07:10] [INFO] ==================================================
+[2026-06-23 21:10:02] [INFO] ==================================================
+[2026-06-23 21:10:02] [INFO] xG fetch started — season 2024
+[2026-06-23 21:10:02] [INFO] ==================================================
+[2026-06-23 21:10:02] [INFO] --- EPL (EPL) ---
+[2026-06-23 21:10:02] [INFO]   Built lookup with 454 local matches for EPL
+[2026-06-23 21:10:04] [INFO]   Understat returned 380 matches
+[2026-06-23 21:10:04] [INFO]   EPL: matched 380, unmatched 0
+[2026-06-23 21:10:04] [INFO] --- LAL (La_Liga) ---
+[2026-06-23 21:10:04] [INFO]   Built lookup with 380 local matches for LAL
+[2026-06-23 21:10:05] [INFO]   Understat returned 380 matches
+[2026-06-23 21:10:05] [INFO]   LAL: matched 380, unmatched 0
+[2026-06-23 21:10:05] [INFO] --- BUN (Bundesliga) ---
+[2026-06-23 21:10:05] [INFO]   Built lookup with 308 local matches for BUN
+[2026-06-23 21:10:05] [INFO]   Understat returned 306 matches
+[2026-06-23 21:10:06] [INFO]   BUN: matched 306, unmatched 0
+[2026-06-23 21:10:06] [INFO] --- SRA (Serie_A) ---
+[2026-06-23 21:10:06] [INFO]   Built lookup with 380 local matches for SRA
+[2026-06-23 21:10:06] [INFO]   Understat returned 380 matches
+[2026-06-23 21:10:06] [INFO]   SRA: matched 380, unmatched 0
+[2026-06-23 21:10:06] [INFO] --- LIG (Ligue_1) ---
+[2026-06-23 21:10:06] [INFO]   Built lookup with 307 local matches for LIG
+[2026-06-23 21:10:07] [INFO]   Understat returned 306 matches
+[2026-06-23 21:10:07] [INFO]   LIG: matched 306, unmatched 0
+[2026-06-23 21:10:07] [INFO] xG fetch complete — total matched: 1752, unmatched: 0
+[2026-06-23 21:10:07] [WARN] Note: UCL, UEL, NPF, ERE, PPL, TSL, SPL are not covered by Understat — their xg_avg_2y/xga_avg_2y will remain NULL.
+[2026-06-23 21:10:07] [INFO] ==================================================
+[2026-06-23 21:10:36] [INFO] ==================================================
+[2026-06-23 21:10:36] [INFO] Step 6 (FIXED) — data processing started
+[2026-06-23 21:10:36] [INFO] ==================================================
+[2026-06-23 21:10:36] [INFO] Loaded 4086 matches total (4057 finished)
+[2026-06-23 21:10:38] [INFO] Progress: 500/4086
+[2026-06-23 21:10:40] [INFO] Progress: 1000/4086
+[2026-06-23 21:10:42] [INFO] Progress: 1500/4086
+[2026-06-23 21:10:44] [INFO] Progress: 2000/4086
+[2026-06-23 21:10:46] [INFO] Progress: 2500/4086
+[2026-06-23 21:10:47] [INFO] Progress: 3000/4086
+[2026-06-23 21:10:49] [INFO] Progress: 3500/4086
+[2026-06-23 21:10:51] [INFO] Progress: 4000/4086
+[2026-06-23 21:10:52] [INFO] team_form: 8172 rows upserted
+[2026-06-23 21:10:52] [INFO] h2h: 4086 rows upserted
+[2026-06-23 21:10:52] [INFO] league_context: 4086 rows upserted
+[2026-06-23 21:10:52] [INFO] Step 6 (FIXED) complete
+[2026-06-23 21:10:52] [INFO] ==================================================
+[2026-06-23 21:10:54] [INFO] ==================================================
+[2026-06-23 21:10:54] [INFO] Step 7 (FIXED) — ML pipeline started
+[2026-06-23 21:10:54] [INFO] ==================================================
+[2026-06-23 21:10:54] [INFO] Loading data...
+[2026-06-23 21:10:54] [INFO] Train-eligible (finished): 4057, Upcoming: 29
+[2026-06-23 21:10:54] [INFO] Engineering features...
+[2026-06-23 21:10:57] [INFO] Eval split: fit on 3245, evaluate on 812 (most recent matches)
+[2026-06-23 21:10:58] [INFO] HONEST EVAL — accuracy: 0.5160, log loss: 0.9754
+[2026-06-23 21:10:58] [INFO] 
+              precision    recall  f1-score   support
+
+        Home       0.55      0.73      0.63       341
+        Draw       0.25      0.14      0.18       193
+        Away       0.57      0.51      0.54       278
+
+    accuracy                           0.52       812
+   macro avg       0.46      0.46      0.45       812
+weighted avg       0.49      0.52      0.49       812
+
+[2026-06-23 21:10:58] [INFO] Refitting on full historical data for production predictions...
+[2026-06-23 21:11:02] [INFO] Saved 29 predictions (model_version=2.0, eval_accuracy=0.5160)
+[2026-06-23 21:11:02] [INFO] Step 7 (FIXED) complete
+[2026-06-23 21:11:02] [INFO] ==================================================

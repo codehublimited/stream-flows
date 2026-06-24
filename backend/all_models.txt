@@ -1,0 +1,112 @@
+=== team.py ===
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
+from app.db.base import Base
+
+class Team(Base):
+    __tablename__ = "teams"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    country = Column(String, nullable=True)
+    api_id = Column(String, unique=True, index=True)
+    logo = Column(String, nullable=True)
+
+    league_id = Column(Integer, ForeignKey("leagues.id"), nullable=True)
+    league = relationship("League", back_populates="teams")
+    
+    # Add this relationship
+    players = relationship("Player", back_populates="team")
+=== match.py ===
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float
+from sqlalchemy.orm import relationship
+from app.db.base import Base
+from datetime import datetime
+
+class Match(Base):
+    __tablename__ = "matches"
+
+    id = Column(Integer, primary_key=True, index=True)
+    api_id = Column(String, unique=True, index=True)
+    home_team_id = Column(Integer, ForeignKey("teams.id"))
+    away_team_id = Column(Integer, ForeignKey("teams.id"))
+    league_id = Column(Integer, ForeignKey("leagues.id"))
+    
+    match_date = Column(DateTime, default=datetime.utcnow)
+    status = Column(String, default="scheduled")  # scheduled, live, finished
+    home_score = Column(Integer, nullable=True)
+    away_score = Column(Integer, nullable=True)
+    
+    home_team = relationship("Team", foreign_keys=[home_team_id])
+    away_team = relationship("Team", foreign_keys=[away_team_id])
+    league = relationship("League")
+=== player.py ===
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
+from app.db.base import Base
+
+class Player(Base):
+    __tablename__ = "players"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    api_id = Column(String, unique=True, index=True)
+    position = Column(String, nullable=True)
+    age = Column(Integer, nullable=True)
+    nationality = Column(String, nullable=True)
+
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=True)
+    team = relationship("Team", back_populates="players")
+=== venue.py ===
+from sqlalchemy import Column, Integer, String
+from app.db.base import Base
+
+class Venue(Base):
+    __tablename__ = "venues"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    city = Column(String, nullable=True)
+    country = Column(String, nullable=True)
+    capacity = Column(Integer, nullable=True)
+=== odds.py ===
+from sqlalchemy import Column, Integer, Float, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
+from app.db.base import Base
+from datetime import datetime
+
+class Odds(Base):
+    __tablename__ = "odds"
+
+    id = Column(Integer, primary_key=True, index=True)
+    match_id = Column(Integer, ForeignKey("matches.id"))
+    bookmaker = Column(String, nullable=True)
+    
+    home_win = Column(Float, nullable=True)
+    draw = Column(Float, nullable=True)
+    away_win = Column(Float, nullable=True)
+    
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+    match = relationship("Match")
+=== prediction.py ===
+from sqlalchemy import Column, Integer, Float, ForeignKey, DateTime, String
+from sqlalchemy.orm import relationship
+from app.db.base import Base
+from datetime import datetime
+
+class Prediction(Base):
+    __tablename__ = "predictions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    match_id = Column(Integer, ForeignKey("matches.id"))
+    
+    predicted_home_win = Column(Float, nullable=True)
+    predicted_draw = Column(Float, nullable=True)
+    predicted_away_win = Column(Float, nullable=True)
+    
+    confidence = Column(Float, nullable=True)        # 0.0 to 1.0
+    prediction_type = Column(String, default="match_winner")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    match = relationship("Match")

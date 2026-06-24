@@ -1,0 +1,140 @@
+import requests
+import psycopg2
+import psycopg2.extras
+import logging
+import time
+import re
+
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s: %(message)s')
+logger = logging.getLogger(__name__)
+
+API_KEY = "fe244fad09b14ed3c9d7b63af96aa2d7f780720d5407bb87d1e6afc7b55313e6"
+PG_PASSWORD = "your_postgres_password"  # 2026Stream
+
+def get_bookmaker():
+    url = f"https://api.odds-api.io/v3/bookmakers?apiKey={API_KEY}"
+    r = requests.get(url, timeout=10)
+    if r.status_code != 200:
+        logger.error(f"Bookmaker fetch failed: {r.status_code}")
+        return "Bet365"
+    data = r.json()
+    for bm in data:
+        if bm.get("name") == "Bet365":
+            return bm.get("name")
+    for bm in data:
+        if "bet365" in bm.get("name", "").lower():
+            return bm.get("name")
+    return data[0].get("name") if data else "Bet365"
+
+BOOKMAKER = get_bookmaker()
+logger.info(f"Using bookmaker: {BOOKMAKER}")
+
+logger.info("Fetching events...")
+events_url = f"https://api.odds-api.io/v3/events?sport=football&apiKey={API_KEY}"
+r = requests.get(events_url, timeout=30)
+if r.status_code != 200:
+    logger.error(f"Events fetch failed: {r.status_code}")
+    exit()
+events = r.json()
+logger.info(f"Found {len(events)} events.")
+
+def get_existing_event_ids():
+    conn = psycopg2.connect(
+        host="localhost", port=5432, dbname="sports_db",
+        user="postgres", password=PG_PASSWORD
+    )
+    cur = conn.cursor()
+    cur.execute("SELECT event_id FROM odds WHERE event_id IS NOT NULL")
+    rows = cur.fetchall()
+    existing = {row[0] for row in rows}
+    cur.close()
+    conn.close()
+    return existing
+
+existing_ids = get_existing_event_ids()
+logger.info(f"Already have {len(existing_ids)} events in DB.")
+
+max_per_run = 5
+processed_count = 0
+to_process = [ev for ev in events if ev.get("id") not in existing_ids]
+
+while True:
+    if not to_process:
+        logger.info("All events processed. Checking for new events in 1 hour...")
+        time.sleep(3600)
+        r = requests.get(events_url, timeout=30)
+        if r.status_code == 200:
+            events = r.json()
+            to_process = [ev for ev in events if ev.get("id") not in existing_ids]
+            logger.info(f"Found {len(to_process)} new events.")
+        continue
+
+    batch = to_process[:max_per_run]
+    for ev in batch:
+        event_id = ev.get("id")
+        if not event_id:
+            continue
+        home = ev.get("home", "Unknown")
+        away = ev.get("away", "Unknown")
+
+        odds_url = f"https://api.odds-api.io/v3/odds?apiKey={API_KEY}&eventId={event_id}&bookmakers={BOOKMAKER}"
+        try:
+            r = requests.get(odds_url, timeout=10)
+            if r.status_code == 200:
+                odds_data = r.json()
+                home_odds = draw_odds = away_odds = None
+                if "bookmakers" in odds_data:
+                    for bm in odds_data.get("bookmakers", []):
+                        for market in bm.get("markets", []):
+                            market_name = market.get("market", "").lower()
+                            if market_name in ["1x2", "h2h", "match_winner", "match winner"]:
+                                for outcome in market.get("outcomes", []):
+                                    if outcome.get("name") == home:
+                                        home_odds = outcome.get("price")
+                                    elif outcome.get("name") == away:
+                                        away_odds = outcome.get("price")
+                                    else:
+                                        draw_odds = outcome.get("price")
+                                break
+                        if home_odds is not None:
+                            break
+                if home_odds is not None and draw_odds is not None and away_odds is not None:
+                    conn = psycopg2.connect(
+                        host="localhost", port=5432, dbname="sports_db",
+                        user="postgres", password=PG_PASSWORD
+                    )
+                    cur = conn.cursor()
+                    cur.execute("""
+                        INSERT INTO odds (bookmaker, home_team, away_team, home_win_odds, draw_odds, away_win_odds, raw_data, event_id)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (BOOKMAKER, home, away, home_odds, draw_odds, away_odds, psycopg2.extras.Json(odds_data), event_id))
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                    existing_ids.add(event_id)
+                    processed_count += 1
+                    logger.info(f"Inserted odds for {home} vs {away} (event {event_id}) - total: {processed_count}")
+                else:
+                    logger.warning(f"No 1X2 odds found for {home} vs {away} (event {event_id})")
+                    existing_ids.add(event_id)
+            elif r.status_code == 429:
+                error_msg = r.json().get("error", "")
+                match = re.search(r"resets in (\d+) minutes? and (\d+) seconds?", error_msg)
+                if match:
+                    minutes = int(match.group(1))
+                    seconds = int(match.group(2))
+                    wait_seconds = minutes * 60 + seconds + 5
+                else:
+                    wait_seconds = 3600
+                logger.warning(f"Rate limit hit. Waiting {wait_seconds} seconds...")
+                time.sleep(wait_seconds)
+            else:
+                logger.warning(f"Odds for {event_id} failed: {r.status_code} - {r.text[:100]}")
+        except Exception as e:
+            logger.warning(f"Error for {event_id}: {e}")
+        time.sleep(2)
+
+    batch_ids = {ev.get("id") for ev in batch}
+    to_process = [ev for ev in to_process if ev.get("id") not in batch_ids]
+    logger.info(f"Batch done. Processed {len(batch)} events. Total: {processed_count}. Remaining: {len(to_process)}")
+    time.sleep(5)
