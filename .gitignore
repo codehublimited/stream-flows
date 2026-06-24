@@ -40,3 +40,6 @@ logs/
 .coverage
 htmlcov/
 .pytest_cache/
+
+# Log and scratch text files
+*.txt
