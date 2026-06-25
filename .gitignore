@@ -41,5 +41,6 @@ logs/
 htmlcov/
 .pytest_cache/
 
-# Log and scratch text files
+# Log and scratch text files (but keep requirements.txt!)
 *.txt
+!requirements.txt
