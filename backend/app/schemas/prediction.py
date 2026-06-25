@@ -57,3 +57,26 @@ class PredictionStats(BaseModel):
     home_correct: int
     draw_correct: int
     away_correct: int
+
+from pydantic import BaseModel
+from typing import Optional, List
+from datetime import datetime
+
+class PredictionBase(BaseModel):
+    match_id: int
+    predicted_home_win: Optional[float] = None
+    predicted_draw: Optional[float] = None
+    predicted_away_win: Optional[float] = None
+    btts_probability: Optional[float] = None
+    over25_probability: Optional[float] = None
+    confidence: Optional[float] = None
+
+class PredictionCreate(PredictionBase):
+    pass
+
+class PredictionResponse(PredictionBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
